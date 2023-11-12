@@ -20,6 +20,7 @@ class BP_tournament(TournamentBP):
     RASSize = 8
     instShiftAmt = 2
 
+
 class ICache(Cache):
     data_latency = 1
     tag_latency = 1
