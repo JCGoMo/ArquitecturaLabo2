@@ -4,7 +4,6 @@ adc-gem5-main/scripts/__pycache__/
 adc-gem5-main/se_results/
 adc-gem5-main/sim.log
 adc-gem5-main/benchmarks/daxpy_unrolling.img
-adc-gem5-main/scripts/nuevo_cpu.py
 adc-gem5-main/scripts/out_of_order.py
 
 
