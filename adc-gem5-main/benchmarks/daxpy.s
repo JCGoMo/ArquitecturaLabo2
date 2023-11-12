@@ -32,7 +32,7 @@ main:
 
 //---------------------- CODE HERE ------------------------------------
 
-
+/*
 // Inicializacion del arreglo
     sub x15, x15, x15
     add x15, x15, #4
@@ -42,6 +42,7 @@ main:
 	ldr		x17, =X
 	ldr		x18, =Y
 	mov x6, #0
+
 
 init:
     sub x13, x13, x13
@@ -60,7 +61,12 @@ init:
 	add x6, x6, #1				//Incrmento por que elemento del vector voy
 
 	cmp x6, x0
-	b.ne init //*****************************************************************
+	b.ne init 
+ */
+
+
+ 
+//*****************************************************************
 
 
 	scvtf d10, x10
@@ -71,29 +77,28 @@ init:
 	fsub d13, d13, d13
 	fsub d14, d14, d14
 	fsub d15, d15, d15
-
+	mov x5, #0
 	mov x6, #0      // Inicializar el registro x6 con el valor 0
 loop:
 	// Cargar el valor correspondiente al elemento en la posición x6 de X en x11
-    ldr d11, [x2, #0]
+    ldr d11, [x2, x5]
 	 // Cargar el valor correspondiente al elemento en la posición x6 de Y en x13
-    ldr d13, [x3, #0]
+    ldr d13, [x3, x5]
 	//alpha * X[i]
 	fmul d14, d11, d10
 	//(alpha * X[i]) + Y[i]
 	fadd d15, d14, d13
 	// Guardar el valor de x14 en la posición x6 de Z
-    str d15, [x4, #0]
+    str d15, [x4, x5]
 	// i = i + 1
 	add x6, x6, #1
-	add x2, x2, #8
-	add x3, x3, #8
-	add x4, x4, #8
+	add x5, x5, #8
+	
 
 	// i == N ?
 	cmp x6, x0
 	 // Si x6 no es igual a x5, saltar de nuevo a la etiqueta "loop"
-    b.ne loop //*****************************************************************
+    b.ne loop 
 
 //---------------------- END CODE -------------------------------------
 
