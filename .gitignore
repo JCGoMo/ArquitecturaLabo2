@@ -1,0 +1,5 @@
+
+adc-gem5-main/benchmarks/daxpy.img
+adc-gem5-main/scripts/__pycache__/
+adc-gem5-main/se_results/
+adc-gem5-main/sim.log
