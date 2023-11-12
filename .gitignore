@@ -7,3 +7,4 @@ adc-gem5-main/benchmarks/daxpy_unrolling.img
 adc-gem5-main/scripts/nuevo_cpu.py
 adc-gem5-main/scripts/out_of_order.py
 adc-gem5-main/scripts/out_of_order.py
+adc-gem5-main/scripts/nuevo_cpu.py
