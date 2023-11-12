@@ -57,6 +57,7 @@ from common.cores.arm import ex5_big
 import devices
 import in_order
 import out_of_order
+import nuevo_cpu
 
 # Pre-defined CPU configurations. Each tuple must be ordered as : (cpu_class,
 # l1_icache_class, l1_dcache_class, walk_cache_class, l2_Cache_class). Any of
@@ -65,6 +66,7 @@ import out_of_order
 cpu_types = {
     in_order.cpu_name: in_order.cpu_spec,
     out_of_order.cpu_name: out_of_order.cpu_spec,
+    nuevo_cpu.cpu_name: nuevo_cpu.cpu_spec,
 }
 
 class SystemWrapper:
