@@ -36,8 +36,13 @@ class DCache(Cache):
     response_latency = 1
     mshrs = 4
     tgts_per_mshr = 8
+<<<<<<< Updated upstream
     size = "16kB"
     assoc = 4
+=======
+    size = "32kB"
+    assoc = 1
+>>>>>>> Stashed changes
     write_buffers = 4
     prefetcher = StridePrefetcher(queue_size=4, degree=4)
 

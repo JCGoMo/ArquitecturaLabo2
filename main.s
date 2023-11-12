@@ -1,5 +1,5 @@
 	.data
-	N:       .dword 4096	    // Number of elements in the vectors
+	N:       .dword 8	    // Number of elements in the vectors
 	Alpha:   .dword 2           // Scalar value
 	
 	.bss 
@@ -21,62 +21,87 @@
 
 //---------------------- CODE HERE ------------------------------------
 
+	ldr     x16, =X		        // Posicion base del arreglo Z
+	ldr		x17, =Y
+	ldr		x18, =Z
+
 // Inicializacion del arreglo
     sub x15, x15, x15
-    add x15, x15, #8
-    scvtf d15, x15                // 8
+    add x15, x15, #4
+    scvtf d15, x15                // 4
 
+	
 	mov x6, #0
 
 init:
     sub x13, x13, x13
     add x13, x13, #2
     scvtf d13, x13
-    fdiv d13, d13, d15
-    stur d13, [x2, #0]             // 0.25
-   
+    fdiv d13, d13, d15				// 0.50	
+    stur d13, [x2, #0]             // X[i] = 1
     sub x14, x14, x14
     add x14, x14, #10
     scvtf d14, x14
     fdiv d14, d14, d15
-    stur d14, [x3, #0]             // 0.8
+    stur d14, [x3, #0]             // 2,5
 
 	add x2, x2, #8				//Avanzo en las pos de los vectores
 	add x3, x3, #8
 	add x6, x6, #1				//Incrmento por que elemento del vector voy
 
 	cmp x6, x0
-	b.ne init //*****************************************************************
+	b.ne init 
 
+//*****************************************************************
 
 	scvtf d10, x10
 	ldr     x2, =X		        // Posicion base del arreglo X 
 	ldr     x3, =Y		        // Posicion base del arreglo Y
-	sub x14, x14, x14
-	sub x13, x13, x13
+	ldr 	x4, =Z
 
+	fsub d11, d11, d11
+	fsub d13, d13, d13
+	fsub d14, d14, d14
+	fsub d15, d15, d15
+	fsub d16, d16, d16
+	fsub d17, d17, d17
+	fsub d18, d18, d18
+	fsub d19, d19, d19
+
+	mov x5, #0
 	mov x6, #0      // Inicializar el registro x6 con el valor 0
 loop:
-	// Cargar el valor correspondiente al elemento en la posición x6 de X en x11
-    ldr d11, [x2, #0]
-	 // Cargar el valor correspondiente al elemento en la posición x6 de Y en x13
-    ldr d13, [x3, #0]
-	//alpha * X[i]
-	fmul d14, d13, d10
-	//(alpha * X[i]) + Y[i]
-	add d15, d14, d13
-	// Guardar el valor de x14 en la posición x6 de Z
-    str d15, [x4, #0]
-	// i = i + 1
-	add x6, x6, #1
-	add x2, x2, #8
-	add x3, x3, #8
-	add x4, x4, #8
-	// i == N ?
-	cmp x6, x0
-	 // Si x6 no es igual a x5, saltar de nuevo a la etiqueta "loop"
-    b.ne loop //*****************************************************************
+	
+    ldr d11, [x16, #0]		//X[i]
+    ldr d12, [x17, #0]		//Y[i]
+	ldr d13, [x16, #8]		//X[i+1]
+	ldr d14, [x17, #8]		//Y[i+1]
+	ldr d15, [x16, #16]		//X[i+2]
+    ldr d16, [x17, #16]		//Y[i+2]	
+	ldr d17, [x16, #24]		//X[i+3]
+	ldr d18, [x17, #24]		//Y[i+3]
 
+	fmul d11, d11, d10		//X[i] * alpha
+	fadd d12, d11, d12		//(X[i] * alpha) + Y[i]
+	fmul d13, d13, d10		//X[i+1] * alpha
+	fadd d14, d13, d14		//(X[i+1] * alpha) + Y[i+1]
+	fmul d15, d15, d10		//X[i+2] * alpha
+	fadd d16, d15, d16		//(X[i+2] * alpha) + Y[i+2]
+	fmul d17, d17, d10		//X[i+3] * alpha
+	fadd d18, d17, d18		//(X[i+3] * alpha) + Y[i+3]
+
+    str d12, [x18, #0]		//Z[i] = (X[i] * alpha) + Y[i]
+	str d14, [x18, #8]		//Z[i+1] = (X[i+1] * alpha) + Y[i+1]
+	str d16, [x18, #16]		//Z[i+2] = (X[i+2] * alpha) + Y[i+2]
+	str d18, [x18, #24]		//Z[i+3] = (X[i+3] * alpha) + Y[i+3]
+
+	add x16, x16, #32		//Avanzan 4 pos en mem
+	add x17, x17, #32		//
+	add x18, x18, #32		//
+
+	add x6, x6, #4			// i = i + 4 
+	cmp x6, x0				// i == N ?
+    b.ne loop 
 infloop:
 
 	b infloop //*****************************************************************
