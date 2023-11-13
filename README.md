@@ -21,7 +21,7 @@ for (int i = 0; i < N; ++i)
 
 ## Simulaciones con distintos tipos de cache
 
-Se realizaron simulaciones para diferentes tamaños de caché de datos ([8KB, 16KB, 32KB, 64KB, 128KB]) con mapeo directo de 1 vía, 2 vías, 4 vías y 8 vías. Se analizaron las siguientes métricas:
+Se realizaron simulaciones para diferentes tamaños de caché de datos ([8KB, 16KB, 32KB, 64KB, 128KB]) con mapeo de 1 vía, 2 vías, 4 vías y 8 vías. Se analizaron las siguientes métricas:
 
 - Número de ciclos (numCycles)
 - Ciclos ociosos (idleCycles)
