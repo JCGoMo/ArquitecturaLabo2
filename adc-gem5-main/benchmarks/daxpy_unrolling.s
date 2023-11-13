@@ -84,25 +84,23 @@ loop:
 	
     ldr d11, [x2, #0]		//X[i]
     ldr d12, [x3, #0]		//Y[i]
-	ldr d13, [x2, #8]		//X[i+1]
-	ldr d14, [x3, #8]		//Y[i+1]
-	ldr d15, [x2, #16]		//X[i+2]
-    ldr d16, [x3, #16]		//Y[i+2]	
-	ldr d17, [x2, #24]		//X[i+3]
-	ldr d18, [x3, #24]		//Y[i+3]
-
 	fmul d11, d11, d10		//X[i] * alpha
 	fadd d12, d11, d12		//(X[i] * alpha) + Y[i]
+	str d12, [x4, #0]		//Z[i] = (X[i] * alpha) + Y[i]
+	ldr d13, [x2, #8]		//X[i+1]
+	ldr d14, [x3, #8]		//Y[i+1]
 	fmul d13, d13, d10		//X[i+1] * alpha
 	fadd d14, d13, d14		//(X[i+1] * alpha) + Y[i+1]
+	str d14, [x4, #8]		//Z[i+1] = (X[i+1] * alpha) + Y[i+1]
+	ldr d15, [x2, #16]		//X[i+2]
+    ldr d16, [x3, #16]		//Y[i+2]
 	fmul d15, d15, d10		//X[i+2] * alpha
 	fadd d16, d15, d16		//(X[i+2] * alpha) + Y[i+2]
+	str d16, [x4, #16]		//Z[i+2] = (X[i+2] * alpha) + Y[i+2]
+	ldr d17, [x2, #24]		//X[i+3]
+	ldr d18, [x3, #24]		//Y[i+3]
 	fmul d17, d17, d10		//X[i+3] * alpha
 	fadd d18, d17, d18		//(X[i+3] * alpha) + Y[i+3]
-
-    str d12, [x4, #0]		//Z[i] = (X[i] * alpha) + Y[i]
-	str d14, [x4, #8]		//Z[i+1] = (X[i+1] * alpha) + Y[i+1]
-	str d16, [x4, #16]		//Z[i+2] = (X[i+2] * alpha) + Y[i+2]
 	str d18, [x4, #24]		//Z[i+3] = (X[i+3] * alpha) + Y[i+3]
 
 	add X2, x2, #32		//Avanzan 4 pos en mem: en X
