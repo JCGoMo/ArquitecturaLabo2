@@ -28,5 +28,12 @@ Se realizaron simulaciones para diferentes tamaños de caché de datos ([8KB, 16
 - Hits totales en la caché de datos (overallHits)
 - Hits de lectura en la caché de datos (ReadReq.hits)
 
-## Análisis y Gráficos
+## Análisis y Gráficos   
+
+| Número de ciclos (numCycles)  | Ciclos ociosos (idleCycles) |
+| :---:    |   :---:  |
+| ![numCycles](/graficos/numCycles.png) | ![idleCycles](/graficos/idleCycles.png) |
+| **Hits totales en la caché de datos (overallHits)**   | **Hits de lectura en la caché de datos (ReadReq.hits)**  |
+| ![overallHits](/graficos/overallHits.png)   | ![ReadReq.hits](/graficos/ReadReq_hits.png)  |
+
 
