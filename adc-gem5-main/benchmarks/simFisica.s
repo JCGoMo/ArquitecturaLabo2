@@ -44,33 +44,50 @@ main:
 
     mov     x8, 0                 // Inicializar el índice del bucle en 0
 	//Inicialización
+	scvtf d7, x7
 init_loop:
     str     x4, [x1, x8, LSL #3]  // Almacena la tmp ambiene en X[i] (x5 = i)
 
 	mul  	x9, x5, x0			  //fc_x*N
-	add		x9, x9, x6			  //(fc_x*N) + fc_y	
-	str		x7, [x4, x9]
+	add		x9, x9, x6			  //(fc_x*N) + fc_y
+
+	str		d7, [x4, x9, LSL #3]
 
     add     x8, x8, #1             // Incrementar el índice del bucle
 	mul 	x0, x0, x0
     cmp     x8, x0                // Comparar con N (número total de elementos en x)
     b.ne    init_loop             // Si no se ha alcanzado el final del bucle, repetir
-//********************************************************************************************
+// end inicialización
+
+
+/*
+los //**************  <= separan bucles/ciclos
+los //--------------  <= separan los if
+
+En los if se ejecuta el computo del "true" si falla la condicion(puesta en el branch)
+y si no se salta a donde se ejecuta el codigo del "else", si fue "true" para no
+ejecutar el caso "else" tambien se hace un salto incondicional
+
+ */
+
+
 	mov     x8, 0				  	// k = 0
-loop_general:
+loop_general://**************************************************************
 
 	mov x9, 0				  	// i = 0
-	loop_1:
+	loop_1://**************************************************************
 	mov x10, 0			  	// j = 0
-	loop_2:
+	loop_2://**************************************************************
+	scvtf d4, x4
 	mul x11, x9, x0		  	// i*N
 	add x11, x11,x10 	  	// (i*N) + j
 	mul x12, x5, x0		  	// fc_x * N	
 	add x12, x12, x6	  	// (fc_x * N) + fc_y	
 	cmp x12, x11
 	b.eq if_1			  	// if((i*N+j) == (fc_x*N+fc_y)) => salta y no modifica "sum"
-	sub x13, x13, x13	 	// sum = 0
+	sub d13, d13, d13	 	// sum = 0
 	if_1:
+	//----------------------------------
 	/*
 	if((i*N+j) != (fc_x*N+fc_y)){
 	sum = 0;
@@ -80,13 +97,15 @@ loop_general:
 	cpm x11, x0			   	// x11 == N?
 	b.ge if_2_false			   // if(i + 1 >= N) => salto a la condicion del else 	
 	mul x11, x11, x0   		// (i+1) * N
+	lsl x11, x11, #3
 	add x11, x11, x10  		// ((i+1) * N) + j	
-	ldr x14, [x1, x11] 		// X[((i+1) * N) + j]
-	add x13, x13, x14  		// sum = sum + x[((i+1)*N) + j]
-	b if_2_true
+	ldr d14, [x1, x11] 		// X[((i+1) * N) + j]
+	fadd d13, d13, d14  		// sum = sum + x[((i+1)*N) + j]
+	b if_2_was_true
 	if_2_false:
-	add x13, x13, x4		//sum = sum + t_amb
-	if_2_true:
+	fadd d13, d13, d4		//sum = sum + t_amb
+	if_2_was_true:
+	//----------------------------------
 	/*
 	if(i + 1 < N)
 		sum = sum + x[(i+1)*N + j];
@@ -98,12 +117,14 @@ loop_general:
 	b.lt if_3_false
 	mul x11, x11, x0   		// (i-1) * N
 	add x11, x11, x10  		// ((i-1) * N) + j
-	ldr x14, [x1, x11] 		// X[((i-1) * N) + j]
-	add x13, x13, x14  		// sum = sum + x[((i-1)*N) + j]
-	b if_3_true
+	lsl x11, x11, #3
+	ldr d14, [x1, x11] 		// X[((i-1) * N) + j]
+	add d13, d13, d14  		// sum = sum + x[((i-1)*N) + j]
+	b if_3_was_true
 	if_3_false:
-	add x13, x13, x4		//sum = sum + t_amb
-	if_3_true:
+	fadd d13, d13, d4		//sum = sum + t_amb
+	if_3_was_true:
+	//----------------------------------
 	/*
 	if(i - 1 >= 0)
 		sum = sum + x[(i-1)*N + j];
@@ -115,32 +136,39 @@ loop_general:
 	b.ge if_4_false
 	mul x11, x9, x0			// i * N
 	add x11, x11, x15		// (i * N) + (j + 1)
-	ldr x14, [x1, x11]		// X[(i * N) + (j + 1)]
-	add x13, x13, x14		// sum = sum + X[(i * N) + (j + 1)]
-	b if_4_true
+	lsl x11, x11, #3
+	ldr d14, [x1, x11]		// X[(i * N) + (j + 1)]
+	add d13, d13, d14		// sum = sum + X[(i * N) + (j + 1)]
+	b if_4_was_true
 	if_4_false:
-	add x13, x13, x4		//sum = sum + t_amb
-	if_4_true:
+	add d13, d13, d4		//sum = sum + t_amb
+	if_4_was_true:
+	//----------------------------------
 	/*
 	if(j + 1 < N)
 		sum = sum + x[i*N + j+1];
 	else
 		sum = sum + t_amb;
 	*/
+	//----------------------------------
 	sub x15, x10, #1
 	cmp x15, xzr
 	b.lt if_5_false
 	mul x11, x9, x0			// i * N
 	add x11, x11, x15		// (i * N) + (j - 1)
-	ldr x14, [x1, x11]		// X[(i * N) + (j - 1)]
-	add x13, x13, x14		// sum = sum + X[(i * N) + (j - 1)]
+	lsl x11, x11, #3
+	ldr d14, [x1, x11]		// X[(i * N) + (j - 1)]
+	fadd d13, d13, d14		// sum = sum + X[(i * N) + (j - 1)]
+	b if_5_was_true
 	if_5_false:
-	add x13, x13, x4		//sum = sum + t_amb
+	fadd d13, d13, d4		//sum = sum + t_amb
 	mul x11, x9, x0			// i * N
 	add x11, x11, x10		// (i * N) + j
-	div x16, x13, #4		// sum / 4
-	str x14, [x2, x11]		// x_tmp[i*N + j] = sum / 4
-	if_5_true:
+	div x16, d13, #4		// sum / 4
+	lsl x11, x11, #3
+	str d14, [x2, x11]		// x_tmp[i*N + j] = sum / 4
+	if_5_was_true:
+	//----------------------------------
 	/*
 	if(j - 1 >= 0)
 		sum = sum + x[i*N + j-1];
@@ -154,28 +182,32 @@ loop_general:
 	add x9, x9, #1			  // i = i + 1	
 	cmp x9, x0				  //i == N ?	
 	b.ne loop_1				  // i != N => jump
+	
+	mov x17, 0				// i = 0
+	mul x18, x0, x0			// N*N
+	loop_3://**************************************************************
+	mul x19, x5, x0			  //fc_x*N
+	add	x19, x19, x6		  //(fc_x*N) + fc_y	
+	cmp x17, x19	
+	b.ne if_false
+	add x23, x17, #0
+	lsl x23, x23, #3
+	ldr x20, [x2, x23]		//x_tmp[i]
+	str x20, [x1, x23]		//x[i] = x_tmp[i]
+	if_false:
+	add x17, x17, #1		// i = i + 1
+	cmp x17, x18			// i < N*N
+	b.lt loop_3
 	/*
 	for (int i = 0; i < N*N; ++i)
 		if(i != (fc_x*N+fc_y))
 			x[i] = x_tmp[i];|
 	*/
-	mov x17, 0				// i = 0
-	mul x18, x0, x0			// N*N
-	loop_3:
-	mul x19, x5, x0			  //fc_x*N
-	add	x19, x19, x6		  //(fc_x*N) + fc_y	
-	cmp x17, x19	
-	b.ne if_false
-	ldr x20, [x2, x17]		//x_tmp[i]
-	str x20, [x1, x17]		//x[i] = x_tmp[i]
-	if_false:
-	add x17, x17, #1		// i = i + 1
-	cmp x17, x18			// i < N*N
-	b.lt loop_3
 
 	add x8, x8, #1					// k = k + 1
 	cmp x8, x3					  // k == n_iter? 
 	b.ne    loop_general		  // k != n_iter => jump
+	//***********************************************************************
 	/*
 	for(int k = 0; k < n_iter; ++k) {
 		for(int i = 0; i < N; ++i) {
