@@ -68,6 +68,8 @@ En los if se ejecuta el computo del "true" si falla la condicion(puesta en el br
 y si no se salta a donde se ejecuta el codigo del "else", si fue "true" para no
 ejecutar el caso "else" tambien se hace un salto incondicional
 
+El codigo comentado de C esta representado en assembler por las instrucciones
+que tiene arriba
  */
 
 
