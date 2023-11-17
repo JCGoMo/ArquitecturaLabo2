@@ -1,5 +1,5 @@
 	.data
-	N:       .dword 3             // Asumimos que N != 0
+	N:       .dword 3            // Asumimos que N != 0
     n_iter:  .dword 10            // Asumimos que n_iter != 0
     t_amb:   .dword 25
     fc_x:    .dword 1
@@ -35,18 +35,21 @@
 	mul 	x19, x0, x0
 	scvtf d7, x7
 	scvtf d4, x4
+	mov x16, x1               
+    mov x17, x1
 	
 init_loop:
-
-	lsl 	x18 , x8, #3
-    str     d4, [x1, x18]  		  // X[i] = t_amb
+    str     d4, [x16, #0]  		  // X[i] = t_amb
+	add 	x16, x16, #8
     add     x8, x8, #1             // Incrementar el índice del bucle
-    cmp     x8, x19                // Comparar con N (número total de elementos en x)
+    cmp     x8, x19                // Comparar con N*N (número total de elementos en x)
     b.lo    init_loop              // Si no se ha alcanzado el final del bucle, repetir
+
 	mul  	x9, x5, x0			  //fc_x*N
 	add		x9, x9, x6			  //(fc_x*N) + fc_y
 	lsl 	x9 , x9, #3			  // lo multiplico por 8 para avanzar en memoria
-	str d7, [x1, x9]       // X[(fc_x * N) + fc_y] = fc_temp
+	add		x17, x17, x9
+	str 	d7, [x17, #0]       // X[(fc_x * N) + fc_y] = fc_temp
 /*
 float fc_temp,sum, 
 // Esta parte inicializa la matriz, solo es necesaria para verificar el código
@@ -95,7 +98,6 @@ que tiene arriba
 
 	mul x12, x5, x0		  	// fc_x * N	
 	add x12, x12, x6	  	// (fc_x * N) + fc_y	
-	lsl x25, x12, #3
 loop_general://************for(int k = 0; k < n_iter; ++k)****************************
 
 	mov x9, 0				  	// i = 0
@@ -106,7 +108,7 @@ loop_general://************for(int k = 0; k < n_iter; ++k)**********************
 			mul x11, x9, x0		  	// i*N
 			add x11, x11,x10 	  	// (i*N) + j
 			cmp x11, x12
-			b.eq if_1			  	// if((i*N+j) == (fc_x*N+fc_y)) => salta
+			b.eq if_1			  	// if((i*N+j) != (fc_x*N+fc_y)) 
 				sub d13, d13, d13	 	// sum = 0
 				
 				//----------------------------------
@@ -114,14 +116,16 @@ loop_general://************for(int k = 0; k < n_iter; ++k)**********************
 				if((i*N+j) != (fc_x*N+fc_y)){
 				sum = 0;
 				*/
-				
+				mov x16, x1               
+    			
 				add x11, x9, #1		   	// x11 = i + 1 
-				cmp x11, x0			   	// x11 == N?
+				cmp x11, x0			   	// i+1 < N?
 					b.hs if_2_false			   // if(i + 1 >= N) => salto a la condicion del else 	
 					mul x11, x11, x0   		// (i+1) * N
 					add x11, x11, x10  		// ((i+1) * N) + j	
 					lsl x11, x11, #3		//avanza memoria de a 8
-					ldr d14, [x1, x11] 		// X[((i+1) * N) + j]
+					add x16, x16, x11
+					ldr d14, [x16, #0] 		// X[((i+1) * N) + j]
 					fadd d13, d13, d14  	// sum = sum + x[((i+1)*N) + j]
 					b if_2_was_true			//Salto para no ejecutar el caso "else"
 					if_2_false:
@@ -134,13 +138,16 @@ loop_general://************for(int k = 0; k < n_iter; ++k)**********************
 				else
 					sum = sum + t_amb;
 				*/
+				mov x16, x1               
+    			
 				sub x11, x9, #1			//i - 1 
 				cmp x11, xzr
 					b.lo if_3_false
 					mul x11, x11, x0   		// (i-1) * N
 					add x11, x11, x10  		// ((i-1) * N) + j
 					lsl x11, x11, #3
-					ldr d14, [x1, x11] 		// X[((i-1) * N) + j]
+					add x16, x16, x11
+					ldr d14, [x16, #0] 		// X[((i-1) * N) + j]
 					add d13, d13, d14  		// sum = sum + x[((i-1)*N) + j]
 					b if_3_was_true			//Salto para no ejecutar el caso "else"
 					if_3_false:
@@ -153,16 +160,17 @@ loop_general://************for(int k = 0; k < n_iter; ++k)**********************
 				else
 					sum = sum + t_amb;
 				*/
-				sub x11, x11, x11
-				fsub d14, d14, d14
-
+				
+				mov x16, x1               
+    			
 				add x15, x10, #1		// j + 1
 				cmp x15, x0				// (j+1) < N ?
 					b.hs if_4_false
 					mul x11, x9, x0			// i * N
 					add x11, x11, x15		// (i * N) + (j + 1)
 					lsl x11, x11, #3		//avanza memoria de a 8
-					ldr d14, [x1, x11]		// X[(i * N) + (j + 1)]
+					add x16, x16, x11
+					ldr d14, [x16, #0]		// X[(i * N) + (j + 1)]
 					add d13, d13, d14		// sum = sum + X[(i * N) + (j + 1)]
 					b if_4_was_true			//Salto para no ejecutar el caso "else"
 					if_4_false:
@@ -176,25 +184,29 @@ loop_general://************for(int k = 0; k < n_iter; ++k)**********************
 					sum = sum + t_amb;
 				*/
 				//----------------------------------
+				mov x16, x1               
+    			
 				sub x15, x10, #1
 				cmp x15, xzr			//j - 1 >= 0 ?
 					b.lo if_5_false
 					mul x11, x9, x0			// i * N
 					add x11, x11, x15		// (i * N) + (j - 1)
 					lsl x11, x11, #3
-					ldr d14, [x1, x11]		// X[(i * N) + (j - 1)]
+					add x16, x16, x11
+					ldr d14, [x16, #0]		// X[(i * N) + (j - 1)]
 					fadd d13, d13, d14		// sum = sum + X[(i * N) + (j - 1)]
 					b if_5_was_true
 					if_5_false:
 					fadd d13, d13, d4		//sum = sum + t_amb
 				if_5_was_true:
+				mov x16, x1               
+    			mov x17, x2
 				mul x11, x9, x0			// i * N
 				add x11, x11, x10		// (i * N) + j
 				lsl x11, x11, #3
+				add x17, x17, x11
 				fdiv d14, d13, d24		// sum / 4
-				cmp x11, x25
-				b.eq if_1
-				str d14, [x2, x11]		// x_tmp[i*N + j] = sum / 4
+				str d14, [x17, #0]		// x_tmp[i*N + j] = sum / 4
 			if_1:
 			//----------------------------------
 			/*
@@ -216,16 +228,20 @@ loop_general://************for(int k = 0; k < n_iter; ++k)**********************
 	mul x19, x5, x0			  //fc_x*N
 	add	x19, x19, x6		  //(fc_x*N) + fc_y	
 	loop_3://**************************************************************
+		mov x16, x1               
+    	mov x17, x2
 		cmp x9, x19	
 		b.eq if_false
 			add x23, x9, #0
 			lsl x23, x23, #3
-			ldr x20, [x2, x23]		//x_tmp[i]
-			str x20, [x1, x23]		//x[i] = x_tmp[i]
+			add x16, x16, x23
+			add x17, x17, x23
+			ldr x20, [x17, #0]		//x_tmp[i]
+			str x20, [x16, #0]		//x[i] = x_tmp[i]
 		if_false:				// no hacemos nada si i != (fc_x*N+fc_y)
 		add x9, x9, #1		// i = i + 1
 		cmp x9, x10			// i < N*N
-	b.lo loop_3
+	b.lt loop_3
 	/*
 	for (int i = 0; i < N*N; ++i)
 		if(i != (fc_x*N+fc_y))
@@ -234,7 +250,7 @@ loop_general://************for(int k = 0; k < n_iter; ++k)**********************
 
 	add x8, x8, #1					// k = k + 1
 	cmp x8, x3					  // k == n_iter? 
-	b.lo    loop_general		  // k < n_iter => jump
+	b.lt    loop_general		  // k < n_iter => jump
 	//***********************************************************************
 	/*
 	for(int k = 0; k < n_iter; ++k) {				<----loop_general
